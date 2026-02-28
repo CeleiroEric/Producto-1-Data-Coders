@@ -35,6 +35,10 @@ public class Cliente {
         this.email = email;
     }
 
+    //Actualizar al correcto nombre
+    public double getFactorEnvio(double CosteEnvio){
+        return Producto.getPrecioEnvio * 1;
+    }
     public String toString(){
         return "Cliente{ Nombre: "+ nombre + "/ Domicilio: " + domicilio +
                 "/ NIF: " + nif + "/ Email: " + email + "}";

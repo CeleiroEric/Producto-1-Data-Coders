@@ -29,6 +29,12 @@ public class Cliente_premium extends Cliente {
     public void setDescuento(double descuento){
         this.descuento=descuento;
     }
+
+    //Cambiar al correcto nombre
+    @Override
+    public double getFactorEnvio(){
+        return Producto.getPrecioEnvio * 0.80;
+    }
     public String toString(){
         return super.toString() + "Tipo: " + tipo + "/ Cuota anual: " + cuota_anual
                 + "/ Descuento: " + descuento;

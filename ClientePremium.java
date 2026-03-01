@@ -1,17 +1,11 @@
-public class Cliente_premium extends Cliente {
+public class ClientePremium extends Cliente {
     private double cuota_anual;
     private double descuento;
-    private String tipo;
 
-    public Cliente_premium(String nombre, String domicilio, String nif, String email,double cuota_anual, double descuento ,String tipo) {
+    public ClientePremium(String nombre, String domicilio, String nif, String email) {
         super(nombre, domicilio, nif, email);
         this.cuota_anual = 30.0;
         this.descuento = 0.20;
-        this.tipo = "Estandar";
-    }
-
-    public String getTipo(){
-        return tipo;
     }
 
     public double getCuotaAnual(){
@@ -30,13 +24,16 @@ public class Cliente_premium extends Cliente {
         this.descuento=descuento;
     }
 
+    public String getTipo() {
+        return "Premium";
+    }
     //Cambiar al correcto nombre
     @Override
-    public double getFactorEnvio(){
-        return Producto.getPrecioEnvio * 0.80;
+    public double getFactorEnvio(Articulo articulo){
+        return articulo.getGastosEnvio() * 0.80;
     }
     public String toString(){
-        return super.toString() + "Tipo: " + tipo + "/ Cuota anual: " + cuota_anual
+        return super.toString() + "Tipo: Premium " + "/ Cuota anual: " + cuota_anual
                 + "/ Descuento: " + descuento;
     }
     }

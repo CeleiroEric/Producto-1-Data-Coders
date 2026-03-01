@@ -1,14 +1,22 @@
-public class Cliente {
+public abstract class Cliente {
     private String nombre;
     private String domicilio;
     private String nif;
     private String email;
 
     public Cliente(String nombre, String domicilio, String nif, String email) {
-        this.nombre = nombre;
-        this.domicilio = domicilio;
-        this.nif = nif;
-        this.email = email;
+
+        if (nombre == null || nombre.isBlank()) {
+            throw new IllegalArgumentException("Nombre obligatorio");
+        }
+        if (email == null || email.isBlank()) {
+            throw new IllegalArgumentException("Email obligatorio");
+        }
+
+        this.nombre = nombre.trim();
+        this.domicilio = (domicilio == null) ? "" : domicilio.trim();
+        this.nif = (nif == null) ? "" : nif.trim();
+        this.email = email.trim();
     }
     public String getNombre(){
         return nombre;
@@ -36,8 +44,9 @@ public class Cliente {
     }
 
     //Actualizar al correcto nombre
-    public double getFactorEnvio(double CosteEnvio){
-        return Producto.getPrecioEnvio * 1;
+    public double getFactorEnvio(Articulo articulo){
+
+        return articulo.getGastosEnvio() * 1;
     }
     public String toString(){
         return "Cliente{ Nombre: "+ nombre + "/ Domicilio: " + domicilio +

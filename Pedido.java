@@ -39,12 +39,10 @@ public class Pedido {
      */
     public double calcularTotal() {
         double subtotal = articulo.getPrecioVenta() * cantidad;
-        double gastos = articulo.getGastosEnvio();
+        //Si el cliente tiene descuento se aplica directamente en este metodo
+        double gastos = cliente.getFactorEnvio(articulo);
 
-        // Si el cliente tiene descuento (Premium), se aplica aquí
-        double descuento = cliente.calcDescuento();
-
-        return (subtotal + gastos) * (1 - descuento);
+        return (subtotal + gastos);
     }
 
     // --- GETTERS ---

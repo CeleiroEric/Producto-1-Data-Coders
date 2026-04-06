@@ -1,136 +1,106 @@
 package datacoders.controlador;
 
-import datacoders.dao.*;
-import datacoders.modelo.*;
-import datacoders.modelo.excepciones.*;
-import java.sql.SQLException;
+import datacoders.modelo.Articulo;
+import datacoders.modelo.Cliente;
+import datacoders.modelo.Datos;
+import datacoders.modelo.Pedido;
+
+import datacoders.modelo.excepciones.ArticuloNoEncontradoException;
+import datacoders.modelo.excepciones.DuplicadoException;
+import datacoders.modelo.excepciones.PedidoNoCancelableException;
+import datacoders.modelo.excepciones.PedidoNoEncontradoException;
+import datacoders.modelo.excepciones.ClienteNoEncontradoException;
+
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
+/**
+ * Controlador (MVC)
+ * - La Vista solo habla con el Controlador.
+ * - El Controlador delega en Datos (Modelo).
+ * - El Controlador NO hace I/O (no System.out, no Scanner).
+ */
 public class Controlador {
 
-    // Instancias de los DAO (Capa de Persistencia)
-    private final ArticuloDAO ArticuloDAO = new ArticuloDAO();
-    private final ClienteDAO ClienteDAO = new ClienteDAO();
-    private final PedidoDAO PedidoDAO = new PedidoDAO();
+    private final Datos datos;
 
     public Controlador() {
-        // Constructor vacío
+        this.datos = new Datos();
     }
 
-    // =========================================================================
-    // GESTIÓN DE ARTÍCULOS
-    // =========================================================================
+    // Útil para tests
+    public Controlador(Datos datos) {
+        this.datos = datos;
+    }
 
-    public boolean addArticulo(String cod, String desc, double precio, double env, int tiempo) throws DuplicadoException {
-        try {
-            ArticuloDAO.insertar(new Articulo(cod, desc, precio, env, tiempo));
-            return true;
-        } catch (SQLException e) {
-            if (e.getErrorCode() == 1062) throw new DuplicadoException("El código '" + cod + "' ya existe.");
-            return false;
-        }
+    // =========================
+    // ARTÍCULOS
+    // =========================
+    public boolean addArticulo(String codigo, String descripcion, double precioVenta,
+                               double gastosEnvio, int tiempoPreparacionMin)
+            throws DuplicadoException {
+
+        Articulo a = new Articulo(codigo, descripcion, precioVenta, gastosEnvio, tiempoPreparacionMin);
+        return datos.addArticulo(a);
     }
 
     public List<Articulo> getArticulos() {
-        try {
-            return ArticuloDAO.listar();
-        } catch (SQLException e) {
-            return List.of();
-        }
+        return datos.getArticulos();
     }
 
-    // =========================================================================
-    // GESTIÓN DE CLIENTES
-    // =========================================================================
-
-    public boolean addClienteEstandar(String n, String d, String ni, String em) throws DuplicadoException {
-        try {
-            ClienteDAO.insertar(new ClienteEstandar(n, d, ni, em));
-            return true;
-        } catch (SQLException e) {
-            if (e.getErrorCode() == 1062) throw new DuplicadoException("El cliente con NIF/Email ya existe.");
-            return false;
-        }
+    public Articulo buscarArticuloPorCodigo(String codigo) throws ArticuloNoEncontradoException {
+        return datos.buscarArticuloPorCodigo(codigo);
     }
 
-    public boolean addClientePremium(String n, String d, String ni, String em) throws DuplicadoException {
-        try {
-            ClienteDAO.insertar(new ClientePremium(n, d, ni, em));
-            return true;
-        } catch (SQLException e) {
-            if (e.getErrorCode() == 1062) throw new DuplicadoException("El cliente con NIF/Email ya existe.");
-            return false;
-        }
+    // =========================
+    // CLIENTES
+    // =========================
+    public boolean addClienteEstandar(String nombre, String domicilio, String nif, String email)
+            throws DuplicadoException {
+        return datos.addClienteEstandar(nombre, domicilio, nif, email);
+    }
+
+    public boolean addClientePremium(String nombre, String domicilio, String nif, String email)
+            throws DuplicadoException {
+        return datos.addClientePremium(nombre, domicilio, nif, email);
     }
 
     public List<Cliente> getClientes() {
-        try {
-            return ClienteDAO.listar();
-        } catch (SQLException e) {
-            return List.of();
-        }
+        return datos.getClientes();
     }
 
     public List<Cliente> getClientesEstandar() {
-        return getClientes().stream()
-                .filter(c -> !(c instanceof ClientePremium))
-                .collect(Collectors.toList());
+        return datos.getClientesEstandar();
     }
 
     public List<Cliente> getClientesPremium() {
-        return getClientes().stream()
-                .filter(c -> c instanceof ClientePremium)
-                .collect(Collectors.toList());
+        return datos.getClientesPremium();
     }
 
-    // =========================================================================
-    // GESTIÓN DE PEDIDOS
-    // =========================================================================
-
-    public void addPedido(String email, String cod, int cant, LocalDateTime fecha) throws Exception {
-        try {
-            // NOTA: Tu PedidoDAO.crearPedido espera (int, String, int)
-            // Si el procedimiento en MySQL acepta Email, cambia el tipo en PedidoDAO.
-            // Por ahora, lo llamamos con el nombre correcto del método:
-
-            // Suponiendo que conviertes el email a ID o que el DAO acepta String:
-            // PedidoDAO.crearPedido(email, cod, cant);
-
-            // Para que no te dé error de compilación ahora mismo, asegúrate de que
-            // los tipos coincidan con lo que escribiste en PedidoDAO.java
-            int idSimulado = 1; // Esto es temporal hasta que obtengas el ID real del cliente
-            PedidoDAO.crearPedido(idSimulado, cod, cant);
-
-        } catch (SQLException e) {
-            throw new Exception("Error en BD: " + e.getMessage());
-        }
+    public Cliente buscarClientePorEmail(String email) throws ClienteNoEncontradoException {
+        return datos.buscarClientePorEmail(email);
     }
 
-    public void eliminarPedido(int num, LocalDateTime ahora) throws PedidoNoCancelableException {
-        try {
-            // Corregido: El método en tu PedidoDAO se llama eliminarPedido
-            PedidoDAO.eliminarPedido(num);
-        } catch (SQLException e) {
-            throw new PedidoNoCancelableException("No se puede eliminar el pedido #" + num + ". Puede que ya esté enviado.");
-        }
+    // =========================
+    // PEDIDOS
+    // =========================
+    public Pedido addPedido(String emailCliente, String datosCliente, String codigoArticulo,
+                            int cantidad, LocalDateTime ahora)
+            throws ArticuloNoEncontradoException, DuplicadoException {
+
+        return datos.addPedido(emailCliente, datosCliente, codigoArticulo, cantidad, ahora);
     }
 
-    public List<Pedido> getPedidosPendientes(String email) {
-        try {
-            // Asegúrate de que estos métodos existan en PedidoDAO con estos nombres
-            return PedidoDAO.listarPendientes(email);
-        } catch (SQLException e) {
-            return List.of();
-        }
+    public boolean eliminarPedido(int numPedido, LocalDateTime ahora)
+            throws PedidoNoEncontradoException, PedidoNoCancelableException {
+        return datos.eliminarPedido(numPedido, ahora);
     }
 
-    public List<Pedido> getPedidosEnviados(String email) {
-        try {
-            return PedidoDAO.listarEnviados(email);
-        } catch (SQLException e) {
-            return List.of();
-        }
+    public List<Pedido> getPedidosPendientes(String emailCliente) {
+        return datos.getPedidosPendientes(emailCliente);
+    }
+
+    public List<Pedido> getPedidosEnviados(String emailCliente) {
+        return datos.getPedidosEnviados(emailCliente);
     }
 }

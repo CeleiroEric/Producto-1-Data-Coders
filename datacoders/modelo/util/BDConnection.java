@@ -5,9 +5,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 /**
- * Clase de utilidad para gestionar la conexión con MySQL.
- *
- * NOTA PARA EL GRUPO:
+  * NOTA PARA EL GRUPO:
  * - Centraliza los datos de conexión para no repetirlos en cada DAO.
  * - Si en el futuro cambia el nombre de la base de datos, usuario o contraseña,
  *   solo habrá que modificar esta clase.
@@ -15,10 +13,13 @@ import java.sql.SQLException;
  */
 public class BDConnection {
 
-    // MODIFICAR según nuestra configuración local de MySQL
-    private static final String URL = "____________________________________";
+    // Adaptado usando la configuración encontrada en la clase Conexion.
+    // IMPORTANTE: el nombre de la base de datos se ha ajustado a "online_store"
+    // porque es el que aparece en schema.sql y procedures.sql.
+    private static final String URL =
+            "jdbc:mysql://localhost:3306/online_store?useSSL=false&serverTimezone=UTC";
     private static final String USER = "root";
-    private static final String PASSWORD = "";
+    private static final String PASSWORD = "rootsql1.26";
 
     // Constructor privado para evitar instanciar esta clase
     private BDConnection() {
@@ -28,6 +29,12 @@ public class BDConnection {
      * Devuelve una conexión abierta a la base de datos.
      */
     public static Connection getConnection() throws SQLException {
-        return DriverManager.getConnection(URL, USER, PASSWORD);
+        try {
+            // Carga explícita del driver de MySQL
+            Class.forName("com.mysql.cj.jdbc.Driver");
+            return DriverManager.getConnection(URL, USER, PASSWORD);
+        } catch (ClassNotFoundException e) {
+            throw new SQLException("No se encontró el driver de MySQL", e);
+        }
     }
 }

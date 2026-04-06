@@ -8,6 +8,7 @@ import datacoders.modelo.excepciones.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 
 public class Datos {
 
@@ -15,20 +16,47 @@ public class Datos {
     private final ArticuloDAO articuloDAO;
     private final PedidoDAO pedidoDAO;
 
+    /**
+     * Constructor principal usado por la aplicación.
+     * MOD (Persona 3): Datos obtiene los DAO desde la fábrica,
+     * manteniendo la Vista y el Controlador sin cambios.
+     */
     public Datos() {
-        // La fábrica te da los DAOs concretos de MySQL.
         DAOFactory factory = DAOFactory.getFactory(DAOFactory.MYSQL);
-        this.clienteDAO = factory.getClienteDAO();
-        this.articuloDAO = factory.getArticuloDAO();
-        this.pedidoDAO = factory.getPedidoDAO();
+
+        // MOD (Persona 3):
+        // Se usa Objects.requireNonNull para detectar antes y con mensaje claro
+        // si la fábrica aún no devuelve implementaciones reales.
+        this.clienteDAO = Objects.requireNonNull(factory.getClienteDAO(),
+                "ClienteDAO no inicializado en MySqlDAOFactory");
+        this.articuloDAO = Objects.requireNonNull(factory.getArticuloDAO(),
+                "ArticuloDAO no inicializado en MySqlDAOFactory");
+        this.pedidoDAO = Objects.requireNonNull(factory.getPedidoDAO(),
+                "PedidoDAO no inicializado en MySqlDAOFactory");
     }
 
-    // === CLIENTES ===
-    public boolean addClienteEstandar(String nombre, String domicilio, String nif, String email) throws DuplicadoException {
+    /**
+     * MOD (Persona 3):
+     * Constructor alternativo para pruebas o integración manual.
+     * Permite inyectar DAO concretos sin depender de la fábrica.
+     * No afecta al funcionamiento normal del programa.
+     */
+    public Datos(ClienteDAO clienteDAO, ArticuloDAO articuloDAO, PedidoDAO pedidoDAO) {
+        this.clienteDAO = Objects.requireNonNull(clienteDAO, "clienteDAO no puede ser null");
+        this.articuloDAO = Objects.requireNonNull(articuloDAO, "articuloDAO no puede ser null");
+        this.pedidoDAO = Objects.requireNonNull(pedidoDAO, "pedidoDAO no puede ser null");
+    }
+
+    // =========================
+    // CLIENTES
+    // =========================
+    public boolean addClienteEstandar(String nombre, String domicilio, String nif, String email)
+            throws DuplicadoException {
         return clienteDAO.insertEstandar(nombre, domicilio, nif, email);
     }
 
-    public boolean addClientePremium(String nombre, String domicilio, String nif, String email) throws DuplicadoException {
+    public boolean addClientePremium(String nombre, String domicilio, String nif, String email)
+            throws DuplicadoException {
         return clienteDAO.insertPremium(nombre, domicilio, nif, email);
     }
 
@@ -48,7 +76,9 @@ public class Datos {
         return clienteDAO.findAllPremium();
     }
 
-    // === ARTÍCULOS ===
+    // =========================
+    // ARTÍCULOS
+    // =========================
     public boolean addArticulo(Articulo a) throws DuplicadoException {
         return articuloDAO.insert(a);
     }
@@ -61,12 +91,30 @@ public class Datos {
         return articuloDAO.findAll();
     }
 
-    // === PEDIDOS ===
-    public Pedido addPedido(String emailCliente, String datosCliente, String codigoArticulo, int cantidad, LocalDateTime ahora)
+    // =========================
+    // PEDIDOS
+    // =========================
+
+    /**
+     * MOD (Persona 3):
+     * Este método ya está adaptado a persistencia.
+     * La implementación real de negocio queda delegada en PedidoDAO.
+     *
+     * NOTA PARA EL GRUPO:
+     * En Producto 3, PedidoDAO debería implementar esta operación usando
+     * JDBC y, preferiblemente, un procedimiento almacenado para crear pedido.
+     */
+    public Pedido addPedido(String emailCliente, String datosCliente, String codigoArticulo,
+                            int cantidad, LocalDateTime ahora)
             throws ArticuloNoEncontradoException, DuplicadoException {
         return pedidoDAO.crearPedido(emailCliente, datosCliente, codigoArticulo, cantidad, ahora);
     }
 
+    /**
+     * MOD (Persona 3):
+     * La lógica de cancelación debe resolverse en PedidoDAO
+     * usando persistencia real y, si corresponde, transacción/procedimiento almacenado.
+     */
     public boolean eliminarPedido(int numPedido, LocalDateTime ahora)
             throws PedidoNoEncontradoException, PedidoNoCancelableException {
         return pedidoDAO.eliminarPedido(numPedido, ahora);

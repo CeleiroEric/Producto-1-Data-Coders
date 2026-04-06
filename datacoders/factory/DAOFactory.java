@@ -1,5 +1,21 @@
 package datacoders.factory;
 
-public class DAOFactory {
+import datacoders.dao.ArticuloDAO;
+import datacoders.dao.ClienteDAO;
+import datacoders.dao.PedidoDAO;
 
+public abstract class DAOFactory {
+
+    public static final int MYSQL = 1;
+
+    public static DAOFactory getFactory(int tipo) {
+        if (tipo == MYSQL) {
+            return new MySqlDAOFactory();
+        }
+        throw new IllegalArgumentException("Tipo de factory no soportado");
+    }
+
+    public abstract ClienteDAO getClienteDAO();
+    public abstract ArticuloDAO getArticuloDAO();
+    public abstract PedidoDAO getPedidoDAO();
 }

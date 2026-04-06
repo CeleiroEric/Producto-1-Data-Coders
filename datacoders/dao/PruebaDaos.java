@@ -7,13 +7,13 @@ import java.util.List;
 
 public class PruebaDaos {
     public static void main(String[] args) {
-        ArticuloDAOInterface articuloDAO = DAOFactory.getArticuloDAO();
+        ArticuloDAOInterface ArticuloDAO = DAOFactory.getArticuloDAO();
 
         try {
             System.out.println("--- 1. COMPROBANDO CONEXIÓN Y LECTURA ---");
 
             // Intentamos leer los artículos que insertamos en MySQL Workbench
-            List<Articulo> lista = articuloDAO.listar();
+            List<Articulo> lista = ArticuloDAO.listar();
 
             if (lista.isEmpty()) {
                 System.out.println("⚠️ La tabla está vacía. Inserta algo en MySQL Workbench primero.");
@@ -29,7 +29,7 @@ public class PruebaDaos {
             String codigoAzar = "A" + (int)(Math.random() * 10000);
             Articulo nuevo = new Articulo(codigoAzar, "Ratón Gaming", 45.0, 5.0, 10);
 
-            articuloDAO.insertar(nuevo);
+            ArticuloDAO.insertar(nuevo);
             System.out.println("✅ ¡Artículo '" + codigoAzar + "' insertado con éxito desde Java!");
 
             System.out.println("\n--- 3. COMPROBANDO LÓGICA DE NEGOCIO (CALCULAR TOTAL) ---");

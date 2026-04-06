@@ -11,9 +11,9 @@ import java.util.stream.Collectors;
 public class Controlador {
 
     // Instancias de los DAO (Capa de Persistencia)
-    private final ArticuloDao articuloDao = new ArticuloDao();
-    private final ClienteDao clienteDao = new ClienteDao();
-    private final PedidoDao pedidoDao = new PedidoDao();
+    private final ArticuloDAO ArticuloDAO = new ArticuloDAO();
+    private final ClienteDAO ClienteDAO = new ClienteDAO();
+    private final PedidoDAO PedidoDAO = new PedidoDAO();
 
     public Controlador() {
         // Constructor vacío
@@ -25,7 +25,7 @@ public class Controlador {
 
     public boolean addArticulo(String cod, String desc, double precio, double env, int tiempo) throws DuplicadoException {
         try {
-            articuloDao.insertar(new Articulo(cod, desc, precio, env, tiempo));
+            ArticuloDAO.insertar(new Articulo(cod, desc, precio, env, tiempo));
             return true;
         } catch (SQLException e) {
             if (e.getErrorCode() == 1062) throw new DuplicadoException("El código '" + cod + "' ya existe.");
@@ -35,7 +35,7 @@ public class Controlador {
 
     public List<Articulo> getArticulos() {
         try {
-            return articuloDao.listar();
+            return ArticuloDAO.listar();
         } catch (SQLException e) {
             return List.of();
         }
@@ -47,7 +47,7 @@ public class Controlador {
 
     public boolean addClienteEstandar(String n, String d, String ni, String em) throws DuplicadoException {
         try {
-            clienteDao.insertar(new ClienteEstandar(n, d, ni, em));
+            ClienteDAO.insertar(new ClienteEstandar(n, d, ni, em));
             return true;
         } catch (SQLException e) {
             if (e.getErrorCode() == 1062) throw new DuplicadoException("El cliente con NIF/Email ya existe.");
@@ -57,7 +57,7 @@ public class Controlador {
 
     public boolean addClientePremium(String n, String d, String ni, String em) throws DuplicadoException {
         try {
-            clienteDao.insertar(new ClientePremium(n, d, ni, em));
+            ClienteDAO.insertar(new ClientePremium(n, d, ni, em));
             return true;
         } catch (SQLException e) {
             if (e.getErrorCode() == 1062) throw new DuplicadoException("El cliente con NIF/Email ya existe.");
@@ -67,7 +67,7 @@ public class Controlador {
 
     public List<Cliente> getClientes() {
         try {
-            return clienteDao.listar();
+            return ClienteDAO.listar();
         } catch (SQLException e) {
             return List.of();
         }
@@ -91,17 +91,17 @@ public class Controlador {
 
     public void addPedido(String email, String cod, int cant, LocalDateTime fecha) throws Exception {
         try {
-            // NOTA: Tu PedidoDao.crearPedido espera (int, String, int)
-            // Si el procedimiento en MySQL acepta Email, cambia el tipo en PedidoDao.
+            // NOTA: Tu PedidoDAO.crearPedido espera (int, String, int)
+            // Si el procedimiento en MySQL acepta Email, cambia el tipo en PedidoDAO.
             // Por ahora, lo llamamos con el nombre correcto del método:
 
             // Suponiendo que conviertes el email a ID o que el DAO acepta String:
-            // pedidoDao.crearPedido(email, cod, cant);
+            // PedidoDAO.crearPedido(email, cod, cant);
 
             // Para que no te dé error de compilación ahora mismo, asegúrate de que
-            // los tipos coincidan con lo que escribiste en PedidoDao.java
+            // los tipos coincidan con lo que escribiste en PedidoDAO.java
             int idSimulado = 1; // Esto es temporal hasta que obtengas el ID real del cliente
-            pedidoDao.crearPedido(idSimulado, cod, cant);
+            PedidoDAO.crearPedido(idSimulado, cod, cant);
 
         } catch (SQLException e) {
             throw new Exception("Error en BD: " + e.getMessage());
@@ -110,8 +110,8 @@ public class Controlador {
 
     public void eliminarPedido(int num, LocalDateTime ahora) throws PedidoNoCancelableException {
         try {
-            // Corregido: El método en tu PedidoDao se llama eliminarPedido
-            pedidoDao.eliminarPedido(num);
+            // Corregido: El método en tu PedidoDAO se llama eliminarPedido
+            PedidoDAO.eliminarPedido(num);
         } catch (SQLException e) {
             throw new PedidoNoCancelableException("No se puede eliminar el pedido #" + num + ". Puede que ya esté enviado.");
         }
@@ -119,8 +119,8 @@ public class Controlador {
 
     public List<Pedido> getPedidosPendientes(String email) {
         try {
-            // Asegúrate de que estos métodos existan en PedidoDao con estos nombres
-            return pedidoDao.listarPendientes(email);
+            // Asegúrate de que estos métodos existan en PedidoDAO con estos nombres
+            return PedidoDAO.listarPendientes(email);
         } catch (SQLException e) {
             return List.of();
         }
@@ -128,7 +128,7 @@ public class Controlador {
 
     public List<Pedido> getPedidosEnviados(String email) {
         try {
-            return pedidoDao.listarEnviados(email);
+            return PedidoDAO.listarEnviados(email);
         } catch (SQLException e) {
             return List.of();
         }

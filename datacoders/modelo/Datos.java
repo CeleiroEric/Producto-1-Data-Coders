@@ -12,9 +12,9 @@ import java.util.Objects;
 
 public class Datos {
 
-    private final ClienteDAO clienteDAO;
-    private final ArticuloDAO articuloDAO;
-    private final PedidoDAO pedidoDAO;
+    private final ClienteDAO ClienteDAO;
+    private final ArticuloDAO ArticuloDAO;
+    private final PedidoDAO PedidoDAO;
 
     /**
      * Constructor principal usado por la aplicación.
@@ -27,11 +27,11 @@ public class Datos {
         // MOD (Persona 3):
         // Se usa Objects.requireNonNull para detectar antes y con mensaje claro
         // si la fábrica aún no devuelve implementaciones reales.
-        this.clienteDAO = Objects.requireNonNull(factory.getClienteDAO(),
+        this.ClienteDAO = Objects.requireNonNull(factory.getClienteDAO(),
                 "ClienteDAO no inicializado en MySqlDAOFactory");
-        this.articuloDAO = Objects.requireNonNull(factory.getArticuloDAO(),
+        this.ArticuloDAO = Objects.requireNonNull(factory.getArticuloDAO(),
                 "ArticuloDAO no inicializado en MySqlDAOFactory");
-        this.pedidoDAO = Objects.requireNonNull(factory.getPedidoDAO(),
+        this.PedidoDAO = Objects.requireNonNull(factory.getPedidoDAO(),
                 "PedidoDAO no inicializado en MySqlDAOFactory");
     }
 
@@ -41,10 +41,10 @@ public class Datos {
      * Permite inyectar DAO concretos sin depender de la fábrica.
      * No afecta al funcionamiento normal del programa.
      */
-    public Datos(ClienteDAO clienteDAO, ArticuloDAO articuloDAO, PedidoDAO pedidoDAO) {
-        this.clienteDAO = Objects.requireNonNull(clienteDAO, "clienteDAO no puede ser null");
-        this.articuloDAO = Objects.requireNonNull(articuloDAO, "articuloDAO no puede ser null");
-        this.pedidoDAO = Objects.requireNonNull(pedidoDAO, "pedidoDAO no puede ser null");
+    public Datos(ClienteDAO ClienteDAO, ArticuloDAO ArticuloDAO, PedidoDAO PedidoDAO) {
+        this.ClienteDAO = Objects.requireNonNull(ClienteDAO, "ClienteDAO no puede ser null");
+        this.ArticuloDAO = Objects.requireNonNull(ArticuloDAO, "ArticuloDAO no puede ser null");
+        this.PedidoDAO = Objects.requireNonNull(PedidoDAO, "PedidoDAO no puede ser null");
     }
 
     // =========================
@@ -52,43 +52,43 @@ public class Datos {
     // =========================
     public boolean addClienteEstandar(String nombre, String domicilio, String nif, String email)
             throws DuplicadoException {
-        return clienteDAO.insertEstandar(nombre, domicilio, nif, email);
+        return ClienteDAO.insertEstandar(nombre, domicilio, nif, email);
     }
 
     public boolean addClientePremium(String nombre, String domicilio, String nif, String email)
             throws DuplicadoException {
-        return clienteDAO.insertPremium(nombre, domicilio, nif, email);
+        return ClienteDAO.insertPremium(nombre, domicilio, nif, email);
     }
 
     public Cliente buscarClientePorEmail(String email) throws ClienteNoEncontradoException {
-        return clienteDAO.findByEmail(email);
+        return ClienteDAO.findByEmail(email);
     }
 
     public List<Cliente> getClientes() {
-        return clienteDAO.findAll();
+        return ClienteDAO.findAll();
     }
 
     public List<Cliente> getClientesEstandar() {
-        return clienteDAO.findAllEstandar();
+        return ClienteDAO.findAllEstandar();
     }
 
     public List<Cliente> getClientesPremium() {
-        return clienteDAO.findAllPremium();
+        return ClienteDAO.findAllPremium();
     }
 
     // =========================
     // ARTÍCULOS
     // =========================
     public boolean addArticulo(Articulo a) throws DuplicadoException {
-        return articuloDAO.insert(a);
+        return ArticuloDAO.insert(a);
     }
 
     public Articulo buscarArticuloPorCodigo(String codigo) throws ArticuloNoEncontradoException {
-        return articuloDAO.findByCodigo(codigo);
+        return ArticuloDAO.findByCodigo(codigo);
     }
 
     public List<Articulo> getArticulos() {
-        return articuloDAO.findAll();
+        return ArticuloDAO.findAll();
     }
 
     // =========================
@@ -107,7 +107,7 @@ public class Datos {
     public Pedido addPedido(String emailCliente, String datosCliente, String codigoArticulo,
                             int cantidad, LocalDateTime ahora)
             throws ArticuloNoEncontradoException, DuplicadoException {
-        return pedidoDAO.crearPedido(emailCliente, datosCliente, codigoArticulo, cantidad, ahora);
+        return PedidoDAO.crearPedido(emailCliente, datosCliente, codigoArticulo, cantidad, ahora);
     }
 
     /**
@@ -117,14 +117,14 @@ public class Datos {
      */
     public boolean eliminarPedido(int numPedido, LocalDateTime ahora)
             throws PedidoNoEncontradoException, PedidoNoCancelableException {
-        return pedidoDAO.eliminarPedido(numPedido, ahora);
+        return PedidoDAO.eliminarPedido(numPedido, ahora);
     }
 
     public List<Pedido> getPedidosPendientes(String emailCliente) {
-        return pedidoDAO.findPendientes(emailCliente);
+        return PedidoDAO.findPendientes(emailCliente);
     }
 
     public List<Pedido> getPedidosEnviados(String emailCliente) {
-        return pedidoDAO.findEnviados(emailCliente);
+        return PedidoDAO.findEnviados(emailCliente);
     }
 }

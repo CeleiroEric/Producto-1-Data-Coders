@@ -1,17 +1,17 @@
-package datacoders.dao;
+// package datacoders.dao;
 
-public class DAOFactory {
+// public class DAOFactory {
 
     // Devolvemos la interfaz, pero instanciamos la clase concreta
-    public static ArticuloDAOInterface getArticuloDAO() {
-        return new ArticuloDao();
-    }
+    // public static ArticuloDAOInterface getArticuloDAO() {
+    //     return new ArticuloDAO();
+    // }
 
-    public static ClienteDAOInterface getClienteDAO() {
-        return new ClienteDao();
-    }
+    // public static ClienteDAOInterface getClienteDAO() {
+       //  return new ClienteDAO();
+    // }
 
-    public static PedidoDAOInterface getPedidoDAO() {
-        return new PedidoDao();
-    }
-}
+    // public static PedidoDAOInterface getPedidoDAO() {
+    //     return new PedidoDAO();
+    // }
+// }

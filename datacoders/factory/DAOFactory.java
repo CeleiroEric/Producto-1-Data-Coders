@@ -12,7 +12,7 @@ public abstract class DAOFactory {
         if (tipo == MYSQL) {
             return new MySqlDAOFactory();
         }
-        throw new IllegalArgumentException("Tipo de factory no soportado");
+        throw new IllegalArgumentException("Tipo de factoría no soportado: " + tipo);
     }
 
     public abstract ClienteDAO getClienteDAO();

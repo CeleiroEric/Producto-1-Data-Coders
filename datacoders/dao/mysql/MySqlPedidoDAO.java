@@ -29,13 +29,13 @@ public class MySqlPedidoDAO implements PedidoDAO {
                               int cantidad, LocalDateTime ahora)
             throws ArticuloNoEncontradoException, DuplicadoException {
 
-        // NOTA PARA EL GRUPO:
+        // NOTA:
         // Aunque la firma recibe "ahora", la implementación actual usa NOW() en MySQL
         // porque el procedimiento almacenado sp_crear_pedido inserta la fecha directamente
-        // en base de datos. Si más adelante se quiere respetar "ahora" desde Java,
+        // en base de datos. Si más adelante queremos respetar "ahora" desde Java,
         // habrá que modificar el procedimiento almacenado y su llamada.
 
-        // El procedimiento almacenado actual NO crea cliente si no existe.
+        // El procedimiento almacenado actual no crea cliente si no existe.
         // Por eso aquí se comprueba y, si falta, se inserta antes de llamar al procedimiento.
         asegurarClienteExiste(emailCliente, datosCliente);
         asegurarArticuloExiste(codigoArticulo);
@@ -63,7 +63,7 @@ public class MySqlPedidoDAO implements PedidoDAO {
     public boolean eliminarPedido(int numPedido, LocalDateTime ahora)
             throws PedidoNoEncontradoException, PedidoNoCancelableException {
 
-        // NOTA PARA EL GRUPO:
+        // NOTA:
         // Igual que en crearPedido, el parámetro "ahora" no se usa actualmente porque
         // la lógica temporal está delegada a MySQL mediante NOW() en el procedimiento
         // almacenado sp_eliminar_pedido.

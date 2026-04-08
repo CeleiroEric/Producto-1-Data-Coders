@@ -14,8 +14,9 @@ public class MySqlArticuloDAO implements ArticuloDao {
 
     @Override
     public boolean insert(Articulo a) throws DuplicadoException {
+        // Corregido: 'articulo' en singular y 'tiempo_preparacion' según tu MySQL
         String sql = """
-                INSERT INTO articulos (codigo, descripcion, precio_venta, gastos_envio, tiempo_preparacion_min)
+                INSERT INTO articulo (codigo, descripcion, precio_venta, gastos_envio, tiempo_preparacion)
                 VALUES (?, ?, ?, ?, ?)
                 """;
 
@@ -40,9 +41,10 @@ public class MySqlArticuloDAO implements ArticuloDao {
 
     @Override
     public Articulo findByCodigo(String codigo) throws ArticuloNoEncontradoException {
+        // Corregido: 'articulo' en singular
         String sql = """
-                SELECT codigo, descripcion, precio_venta, gastos_envio, tiempo_preparacion_min
-                FROM articulos
+                SELECT codigo, descripcion, precio_venta, gastos_envio, tiempo_preparacion
+                FROM articulo
                 WHERE codigo = ?
                 """;
 
@@ -61,7 +63,7 @@ public class MySqlArticuloDAO implements ArticuloDao {
                         rs.getString("descripcion"),
                         rs.getDouble("precio_venta"),
                         rs.getDouble("gastos_envio"),
-                        rs.getInt("tiempo_preparacion_min")
+                        rs.getInt("tiempo_preparacion")
                 );
             }
 
@@ -72,9 +74,10 @@ public class MySqlArticuloDAO implements ArticuloDao {
 
     @Override
     public List<Articulo> findAll() {
+        // Corregido: 'articulo' en singular
         String sql = """
-                SELECT codigo, descripcion, precio_venta, gastos_envio, tiempo_preparacion_min
-                FROM articulos
+                SELECT codigo, descripcion, precio_venta, gastos_envio, tiempo_preparacion
+                FROM articulo
                 ORDER BY codigo
                 """;
 
@@ -90,7 +93,7 @@ public class MySqlArticuloDAO implements ArticuloDao {
                         rs.getString("descripcion"),
                         rs.getDouble("precio_venta"),
                         rs.getDouble("gastos_envio"),
-                        rs.getInt("tiempo_preparacion_min")
+                        rs.getInt("tiempo_preparacion")
                 ));
             }
 

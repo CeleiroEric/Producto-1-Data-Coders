@@ -5,7 +5,6 @@ import datacoders.modelo.Articulo;
 import datacoders.modelo.excepciones.ArticuloNoEncontradoException;
 import datacoders.modelo.excepciones.DuplicadoException;
 import datacoders.modelo.util.BDConnection;
-
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;

@@ -29,14 +29,6 @@ public class MySqlPedidoDAO implements PedidoDao {
                               int cantidad, LocalDateTime ahora)
             throws ArticuloNoEncontradoException, DuplicadoException {
 
-        // NOTA:
-        // Aunque la firma recibe "ahora", la implementación actual usa NOW() en MySQL
-        // porque el procedimiento almacenado sp_crear_pedido inserta la fecha directamente
-        // en base de datos. Si más adelante queremos respetar "ahora" desde Java,
-        // habrá que modificar el procedimiento almacenado y su llamada.
-
-        // El procedimiento almacenado actual no crea cliente si no existe.
-        // Por eso aquí se comprueba y, si falta, se inserta antes de llamar al procedimiento.
         asegurarClienteExiste(emailCliente, datosCliente);
         asegurarArticuloExiste(codigoArticulo);
 
@@ -63,11 +55,6 @@ public class MySqlPedidoDAO implements PedidoDao {
     public boolean eliminarPedido(int numPedido, LocalDateTime ahora)
             throws PedidoNoEncontradoException, PedidoNoCancelableException {
 
-        // NOTA:
-        // Igual que en crearPedido, el parámetro "ahora" no se usa actualmente porque
-        // la lógica temporal está delegada a MySQL mediante NOW() en el procedimiento
-        // almacenado sp_eliminar_pedido.
-
         comprobarPedidoExiste(numPedido);
 
         String call = "{CALL sp_eliminar_pedido(?)}";
@@ -81,28 +68,27 @@ public class MySqlPedidoDAO implements PedidoDao {
 
         } catch (SQLException e) {
             String msg = e.getMessage() == null ? "" : e.getMessage().toLowerCase();
-
             if (msg.contains("no se puede cancelar")) {
                 throw new PedidoNoCancelableException(
                         "El pedido no se puede cancelar: ya está en preparación o enviado."
                 );
             }
-
             throw new RuntimeException("Error al eliminar pedido: " + e.getMessage(), e);
         }
     }
 
     @Override
     public List<Pedido> findPendientes(String emailCliente) {
+        // CORREGIDO: 'articulo' en singular y 'tiempo_preparacion' sin el '_min'
         StringBuilder sql = new StringBuilder("""
                 SELECT
                     p.num_pedido, p.cantidad, p.fecha_hora,
                     c.nombre, c.domicilio, c.nif, c.email, c.tipo,
-                    a.codigo, a.descripcion, a.precio_venta, a.gastos_envio, a.tiempo_preparacion_min
+                    a.codigo, a.descripcion, a.precio_venta, a.gastos_envio, a.tiempo_preparacion
                 FROM pedidos p
                 JOIN clientes c ON p.id_cliente = c.id_cliente
-                JOIN articulos a ON p.id_articulo = a.id_articulo
-                WHERE TIMESTAMPDIFF(MINUTE, p.fecha_hora, NOW()) < a.tiempo_preparacion_min
+                JOIN articulo a ON p.id_articulo = a.id_articulo
+                WHERE TIMESTAMPDIFF(MINUTE, p.fecha_hora, NOW()) < a.tiempo_preparacion
                 """);
 
         boolean filtrar = emailCliente != null && !emailCliente.isBlank();
@@ -116,15 +102,16 @@ public class MySqlPedidoDAO implements PedidoDao {
 
     @Override
     public List<Pedido> findEnviados(String emailCliente) {
+        // CORREGIDO: 'articulo' en singular y 'tiempo_preparacion'
         StringBuilder sql = new StringBuilder("""
                 SELECT
                     p.num_pedido, p.cantidad, p.fecha_hora,
                     c.nombre, c.domicilio, c.nif, c.email, c.tipo,
-                    a.codigo, a.descripcion, a.precio_venta, a.gastos_envio, a.tiempo_preparacion_min
+                    a.codigo, a.descripcion, a.precio_venta, a.gastos_envio, a.tiempo_preparacion
                 FROM pedidos p
                 JOIN clientes c ON p.id_cliente = c.id_cliente
-                JOIN articulos a ON p.id_articulo = a.id_articulo
-                WHERE TIMESTAMPDIFF(MINUTE, p.fecha_hora, NOW()) >= a.tiempo_preparacion_min
+                JOIN articulo a ON p.id_articulo = a.id_articulo
+                WHERE TIMESTAMPDIFF(MINUTE, p.fecha_hora, NOW()) >= a.tiempo_preparacion
                 """);
 
         boolean filtrar = emailCliente != null && !emailCliente.isBlank();
@@ -138,7 +125,6 @@ public class MySqlPedidoDAO implements PedidoDao {
 
     private List<Pedido> ejecutarListadoPedidos(String sql, String email) {
         List<Pedido> pedidos = new ArrayList<>();
-
         try (Connection con = BDConnection.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
 
@@ -151,9 +137,7 @@ public class MySqlPedidoDAO implements PedidoDao {
                     pedidos.add(mapPedido(rs));
                 }
             }
-
             return pedidos;
-
         } catch (SQLException e) {
             throw new RuntimeException("Error al listar pedidos: " + e.getMessage(), e);
         }
@@ -164,43 +148,29 @@ public class MySqlPedidoDAO implements PedidoDao {
         String tipo = rs.getString("tipo");
 
         if ("Premium".equalsIgnoreCase(tipo)) {
-            cliente = new ClientePremium(
-                    rs.getString("nombre"),
-                    rs.getString("domicilio"),
-                    rs.getString("nif"),
-                    rs.getString("email")
-            );
+            cliente = new ClientePremium(rs.getString("nombre"), rs.getString("domicilio"), rs.getString("nif"), rs.getString("email"));
         } else {
-            cliente = new ClienteEstandar(
-                    rs.getString("nombre"),
-                    rs.getString("domicilio"),
-                    rs.getString("nif"),
-                    rs.getString("email")
-            );
+            cliente = new ClienteEstandar(rs.getString("nombre"), rs.getString("domicilio"), rs.getString("nif"), rs.getString("email"));
         }
 
+        // CORREGIDO: 'tiempo_preparacion'
         Articulo articulo = new Articulo(
                 rs.getString("codigo"),
                 rs.getString("descripcion"),
                 rs.getDouble("precio_venta"),
                 rs.getDouble("gastos_envio"),
-                rs.getInt("tiempo_preparacion_min")
+                rs.getInt("tiempo_preparacion")
         );
 
         Timestamp ts = rs.getTimestamp("fecha_hora");
         LocalDateTime fechaHora = (ts != null) ? ts.toLocalDateTime() : LocalDateTime.now();
 
-        return new Pedido(
-                rs.getInt("num_pedido"),
-                cliente,
-                articulo,
-                rs.getInt("cantidad"),
-                fechaHora
-        );
+        return new Pedido(rs.getInt("num_pedido"), cliente, articulo, rs.getInt("cantidad"), fechaHora);
     }
 
     private void asegurarArticuloExiste(String codigoArticulo) throws ArticuloNoEncontradoException {
-        String sql = "SELECT id_articulo FROM articulos WHERE codigo = ?";
+        // CORREGIDO: 'articulo' en singular
+        String sql = "SELECT id_articulo FROM articulo WHERE codigo = ?";
 
         try (Connection con = BDConnection.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
@@ -209,12 +179,9 @@ public class MySqlPedidoDAO implements PedidoDao {
 
             try (ResultSet rs = ps.executeQuery()) {
                 if (!rs.next()) {
-                    throw new ArticuloNoEncontradoException(
-                            "No existe artículo con código: " + codigoArticulo
-                    );
+                    throw new ArticuloNoEncontradoException("No existe artículo con código: " + codigoArticulo);
                 }
             }
-
         } catch (SQLException e) {
             throw new RuntimeException("Error comprobando artículo: " + e.getMessage(), e);
         }
@@ -229,23 +196,15 @@ public class MySqlPedidoDAO implements PedidoDao {
             check.setString(1, emailCliente);
 
             try (ResultSet rs = check.executeQuery()) {
-                if (rs.next()) {
-                    return; // ya existe
-                }
+                if (rs.next()) return;
             }
 
-            // Si no existe, se crea a partir de datosCliente: nombre|domicilio|nif|tipo
             String[] partes = parseDatosCliente(datosCliente);
-            String nombre = partes[0];
-            String domicilio = partes[1];
-            String nif = partes[2];
-            String tipo = partes[3];
-
             MySqlClienteDAO clienteDAO = new MySqlClienteDAO();
-            if ("premium".equalsIgnoreCase(tipo)) {
-                clienteDAO.insertPremium(nombre, domicilio, nif, emailCliente);
+            if ("premium".equalsIgnoreCase(partes[3])) {
+                clienteDAO.insertPremium(partes[0], partes[1], partes[2], emailCliente);
             } else {
-                clienteDAO.insertEstandar(nombre, domicilio, nif, emailCliente);
+                clienteDAO.insertEstandar(partes[0], partes[1], partes[2], emailCliente);
             }
 
         } catch (SQLException e) {
@@ -254,52 +213,42 @@ public class MySqlPedidoDAO implements PedidoDao {
     }
 
     private String[] parseDatosCliente(String datosCliente) {
-        // Formato esperado: nombre|domicilio|nif|tipo
-        String nombre = "N/D";
-        String domicilio = "N/D";
-        String nif = "N/D";
-        String tipo = "Estandar";
-
+        String nombre = "N/D", domicilio = "N/D", nif = "N/D", tipo = "Estandar";
         if (datosCliente != null && !datosCliente.isBlank()) {
             String[] parts = datosCliente.split("\\|");
-            if (parts.length > 0 && !parts[0].isBlank()) nombre = parts[0].trim();
-            if (parts.length > 1 && !parts[1].isBlank()) domicilio = parts[1].trim();
-            if (parts.length > 2 && !parts[2].isBlank()) nif = parts[2].trim();
-            if (parts.length > 3 && !parts[3].isBlank()) tipo = parts[3].trim();
+            if (parts.length > 0) nombre = parts[0].trim();
+            if (parts.length > 1) domicilio = parts[1].trim();
+            if (parts.length > 2) nif = parts[2].trim();
+            if (parts.length > 3) tipo = parts[3].trim();
         }
-
         return new String[]{nombre, domicilio, nif, tipo};
     }
 
     private int getLastInsertId(Connection con) throws SQLException {
         try (PreparedStatement ps = con.prepareStatement("SELECT LAST_INSERT_ID()");
              ResultSet rs = ps.executeQuery()) {
-            if (rs.next()) {
-                return rs.getInt(1);
-            }
+            if (rs.next()) return rs.getInt(1);
             throw new SQLException("No se pudo recuperar LAST_INSERT_ID()");
         }
     }
 
     private Pedido buscarPedidoPorNumero(Connection con, int numPedido) throws SQLException {
+        // CORREGIDO: 'articulo' en singular y 'tiempo_preparacion'
         String sql = """
                 SELECT
                     p.num_pedido, p.cantidad, p.fecha_hora,
                     c.nombre, c.domicilio, c.nif, c.email, c.tipo,
-                    a.codigo, a.descripcion, a.precio_venta, a.gastos_envio, a.tiempo_preparacion_min
+                    a.codigo, a.descripcion, a.precio_venta, a.gastos_envio, a.tiempo_preparacion
                 FROM pedidos p
                 JOIN clientes c ON p.id_cliente = c.id_cliente
-                JOIN articulos a ON p.id_articulo = a.id_articulo
+                JOIN articulo a ON p.id_articulo = a.id_articulo
                 WHERE p.num_pedido = ?
                 """;
 
         try (PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setInt(1, numPedido);
-
             try (ResultSet rs = ps.executeQuery()) {
-                if (!rs.next()) {
-                    throw new SQLException("No se pudo recuperar el pedido insertado");
-                }
+                if (!rs.next()) throw new SQLException("No se pudo recuperar el pedido insertado");
                 return mapPedido(rs);
             }
         }
@@ -307,20 +256,12 @@ public class MySqlPedidoDAO implements PedidoDao {
 
     private void comprobarPedidoExiste(int numPedido) throws PedidoNoEncontradoException {
         String sql = "SELECT num_pedido FROM pedidos WHERE num_pedido = ?";
-
         try (Connection con = BDConnection.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
-
             ps.setInt(1, numPedido);
-
             try (ResultSet rs = ps.executeQuery()) {
-                if (!rs.next()) {
-                    throw new PedidoNoEncontradoException(
-                            "No existe pedido con número: " + numPedido
-                    );
-                }
+                if (!rs.next()) throw new PedidoNoEncontradoException("No existe pedido con número: " + numPedido);
             }
-
         } catch (SQLException e) {
             throw new RuntimeException("Error comprobando pedido: " + e.getMessage(), e);
         }

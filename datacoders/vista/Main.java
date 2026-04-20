@@ -1,12 +1,12 @@
 package datacoders.vista;
-import datacoders.modelo.*;
-import datacoders.controlador.*;
-
+import datacoders.vista.gui.MainFrame;
+import javax.swing.SwingUtilities;
 
 public class Main {
     public static void main(String[] args) {
-        GestionStore vista = new GestionStore();
-        vista.inicio();
+        SwingUtilities.invokeLater(() -> {
+            MainFrame frame = new MainFrame();
+            frame.setVisible(true);
+        });
     }
 }
-

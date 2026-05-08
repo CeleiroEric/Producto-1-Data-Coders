@@ -1,0 +1,20 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "java",
+      "name": "JavaFX Producto 5",
+      "request": "launch",
+      "mainClass": "datacoders.vista.Main",
+      "modulePaths": [
+        "${workspaceFolder}/lib"
+      ],
+      "classPaths": [
+        "${workspaceFolder}/bin",
+        "${workspaceFolder}/src"
+      ],
+      "vmArgs": "--add-modules javafx.controls,javafx.graphics,javafx.base",
+      "console": "integratedTerminal"
+    }
+  ]
+}

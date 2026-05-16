@@ -1,5 +1,17 @@
 {
+  "java.configuration.runtimes": [
+    {
+      "name": "JavaSE-21",
+      "path": "C:/Program Files/Eclipse Adoptium/jdk-21.0.11.10-hotspot",
+      "default": true
+    }
+  ],
+  "java.project.sourcePaths": [
+    "src"
+  ],
+  "java.project.outputPath": "bin",
   "java.project.referencedLibraries": [
-    "lib/**/*.jar"
+    "lib/deps/**/*.jar",
+    "lib/javafx/**/*.jar"
   ]
 }
